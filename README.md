@@ -51,8 +51,10 @@ python chromium_bookmark_manager.py move "PyPI" "Bookmarks Bar/Python Resources"
 | `rename` | ✏️ Rename a bookmark or folder |
 | `set_url` | 🔗 Change the URL of a bookmark |
 | `move` | 📦 Move a bookmark to another folder |
-| `delete` | 🗑️ Delete a bookmark or folder |
-| `clear` | 🧹 Remove all items from a folder |
+| `delete` | 🗑️ Delete a bookmark or folder ⚠️ |
+| `clear` | 🧹 Remove all items from a folder ⚠️ |
+
+> ⚠️ Commands marked with ⚠️ require confirmation (can be skipped with `-y` or `--force`)
 
 ---
 
@@ -200,18 +202,68 @@ python chromium_bookmark_manager.py move "Old Site" "Other Bookmarks/Archive"
 
 #### 🗑️ Delete
 ```bash
-# Delete a bookmark
+# Delete a bookmark (will ask for confirmation)
 python chromium_bookmark_manager.py delete "Old Bookmark"
 
+# Delete without confirmation (for scripts/AI)
+python chromium_bookmark_manager.py delete "Old Bookmark" -y
+
 # Delete a folder (and all its contents)
-python chromium_bookmark_manager.py delete "Temp Folder"
+python chromium_bookmark_manager.py delete "Temp Folder" --force
 ```
 
 #### 🧹 Clear Folder
 ```bash
-# Remove all items from a folder (keeps the folder)
+# Remove all items from a folder (requires confirmation)
 python chromium_bookmark_manager.py clear "Bookmarks Bar/Temp"
+
+# Clear without confirmation
+python chromium_bookmark_manager.py clear "Bookmarks Bar/Temp" -y
 ```
+
+---
+
+## 🛡️ Safety Features
+
+This tool modifies your bookmarks **directly and permanently**. To protect your data:
+
+### ⚠️ Warning Before Modifications
+
+When running any command that modifies bookmarks (`add`, `delete`, `rename`, etc.), you'll see:
+
+```
+============================================================
+⚠️  ATTENTION - MODIFICATION DIRECTE DES FAVORIS
+============================================================
+Vous allez modifier les favoris de Google Chrome.
+Les changements sont IMMÉDIATS et PERMANENTS.
+
+💡 RECOMMANDATION: Exportez vos favoris avant de continuer !
+   Dans Google Chrome: Menu > Favoris > Gestionnaire de favoris
+   Puis: ⋮ > Exporter les favoris
+============================================================
+```
+
+### 🔐 Confirmation for Dangerous Commands
+
+`delete` and `clear` require confirmation:
+
+```
+⚠️  Voulez-vous vraiment supprimer 'My Bookmark' ? [y/N]: 
+```
+
+To skip confirmation (for automation/AI):
+```bash
+python chromium_bookmark_manager.py delete "Bookmark" -y
+python chromium_bookmark_manager.py clear "Folder" --force
+```
+
+### 💾 Recommended Workflow
+
+1. **Export your bookmarks** before making changes
+2. Use `list` or `search` to verify items exist
+3. Run the modifying command
+4. Verify changes in your browser
 
 ---
 

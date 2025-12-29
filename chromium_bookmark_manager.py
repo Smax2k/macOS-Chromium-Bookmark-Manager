@@ -417,6 +417,41 @@ def list_browsers():
     print(f"\nDefault browser: {DEFAULT_BROWSER}")
 
 
+def confirm_action(message, default=False):
+    """Ask user for confirmation. Returns True if confirmed."""
+    suffix = " [y/N]: " if not default else " [Y/n]: "
+    try:
+        response = input(f"⚠️  {message}{suffix}").strip().lower()
+        if not response:
+            return default
+        return response in ['y', 'yes', 'oui', 'o']
+    except (EOFError, KeyboardInterrupt):
+        print("\n❌ Operation cancelled.")
+        return False
+
+
+def print_safety_warning(browser_name):
+    """Print a safety warning before destructive operations."""
+    print("=" * 60)
+    print("⚠️  ATTENTION - MODIFICATION DIRECTE DES FAVORIS")
+    print("=" * 60)
+    print(f"Vous allez modifier les favoris de {browser_name}.")
+    print("Les changements sont IMMÉDIATS et PERMANENTS.")
+    print("")
+    print("💡 RECOMMANDATION: Exportez vos favoris avant de continuer !")
+    print(f"   Dans {browser_name}: Menu > Favoris > Gestionnaire de favoris")
+    print("   Puis: ⋮ > Exporter les favoris")
+    print("=" * 60)
+    print("")
+
+
+# Commandes qui modifient les favoris (nécessitent un avertissement)
+MODIFYING_COMMANDS = ["add", "create_folder", "rename", "set_url", "move", "delete", "clear"]
+
+# Commandes dangereuses qui nécessitent une confirmation
+DANGEROUS_COMMANDS = ["delete", "clear"]
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Chromium Bookmark Manager - Manage bookmarks for Chromium-based browsers via CLI",
@@ -427,19 +462,19 @@ Examples:
   %(prog)s -b brave list --depth 2                 # List Brave bookmarks with max depth 2
   %(prog)s search "github"                         # Search for "github" in bookmarks
   %(prog)s add "GitHub" "https://github.com"       # Add bookmark to Bookmarks Bar
-  %(prog)s add "Docs" "https://docs.python.org" --folder "Bookmarks Bar/Dev"
   %(prog)s create_folder "Bookmarks Bar/Projects"  # Create a new folder
   %(prog)s rename "Old Name" "New Name"            # Rename a bookmark or folder
-  %(prog)s set_url "GitHub" "https://github.com/new"  # Update bookmark URL
-  %(prog)s get "GitHub"                            # Get details of a bookmark
-  %(prog)s move "GitHub" "Bookmarks Bar/Dev"       # Move bookmark to folder
-  %(prog)s delete "Old Bookmark"                   # Delete a bookmark or folder
-  %(prog)s clear "Bookmarks Bar/Temp"              # Remove all items from folder
-  %(prog)s -b edge browsers                        # List supported browsers
+  %(prog)s delete "Old Bookmark"                   # Delete (with confirmation)
+  %(prog)s delete "Old Bookmark" -y                # Delete without confirmation
+  %(prog)s clear "Bookmarks Bar/Temp" --force      # Clear folder without confirmation
+
+Safety:
+  - Modifying commands show a warning to export bookmarks first
+  - 'delete' and 'clear' require confirmation (use -y/--force to skip)
+  - Changes are IMMEDIATE and PERMANENT in your browser
 
 AI Usage:
-  This tool is designed to be easily used by AI assistants to organize bookmarks.
-  All commands return clear success/error messages suitable for automated parsing.
+  This tool is designed for AI assistants. Use -y/--force for automation.
         """
     )
     
@@ -494,12 +529,14 @@ AI Usage:
     p_move.add_argument("destination", help="Destination folder path")
     
     # delete
-    p_delete = subparsers.add_parser("delete", help="Delete a bookmark or folder")
+    p_delete = subparsers.add_parser("delete", help="Delete a bookmark or folder (requires confirmation)")
     p_delete.add_argument("name", help="Name of the item to delete")
+    p_delete.add_argument("-y", "--force", action="store_true", help="Skip confirmation prompt")
     
     # clear
-    p_clear = subparsers.add_parser("clear", help="Remove all items from a folder")
+    p_clear = subparsers.add_parser("clear", help="Remove all items from a folder (requires confirmation)")
     p_clear.add_argument("folder", help="Folder path to clear")
+    p_clear.add_argument("-y", "--force", action="store_true", help="Skip confirmation prompt")
     
     args = parser.parse_args()
     
@@ -514,6 +551,10 @@ AI Usage:
     try:
         manager = BookmarkManager(args.browser)
         print(f"🌐 Connected to {manager.browser_name}\n")
+        
+        # Afficher l'avertissement pour les commandes qui modifient les favoris
+        if args.action in MODIFYING_COMMANDS:
+            print_safety_warning(manager.browser_name)
         
         if args.action == "list":
             manager.list_all(max_depth=args.depth)
@@ -536,9 +577,17 @@ AI Usage:
         elif args.action == "move":
             manager.move_item(args.name, args.destination)
         elif args.action == "delete":
-            manager.delete_item(args.name)
+            # Confirmation requise pour delete
+            if args.force or confirm_action(f"Voulez-vous vraiment supprimer '{args.name}' ?"):
+                manager.delete_item(args.name)
+            else:
+                print("❌ Opération annulée.")
         elif args.action == "clear":
-            manager.clear_folder(args.folder)
+            # Confirmation requise pour clear
+            if args.force or confirm_action(f"Voulez-vous vraiment VIDER le dossier '{args.folder}' ? Cette action est IRRÉVERSIBLE !"):
+                manager.clear_folder(args.folder)
+            else:
+                print("❌ Opération annulée.")
             
     except Exception as e:
         print(f"❌ Error: {e}")
