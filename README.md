@@ -43,7 +43,7 @@ python chromium_bookmark_manager.py move "PyPI" "Bookmarks Bar/Python Resources"
 
 | Command | Description |
 |---------|-------------|
-| `list` | 📋 List all bookmarks with tree structure |
+| `list` | 📋 List all bookmarks with tree structure (use `--folders` for folders only) |
 | `search` | 🔍 Search bookmarks by title or URL |
 | `get` | 📄 Get details of a specific bookmark or folder |
 | `add` | ➕ Add a new bookmark |
@@ -125,6 +125,9 @@ python chromium_bookmark_manager.py list
 
 # Limit depth (useful for large bookmark collections)
 python chromium_bookmark_manager.py list --depth 2
+
+# List only folders
+python chromium_bookmark_manager.py list --folders
 
 # List bookmarks in Brave
 python chromium_bookmark_manager.py -b brave list
@@ -343,8 +346,8 @@ manager = BookmarkManager()
 # Or connect to another browser
 manager = BookmarkManager("brave")
 
-# List bookmarks
-manager.list_all(max_depth=2)
+# List bookmarks (folders only)
+manager.list_all(max_depth=2, folders_only=True)
 
 # Search
 results = manager.search("github")

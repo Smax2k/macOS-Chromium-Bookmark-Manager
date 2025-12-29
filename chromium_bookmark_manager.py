@@ -83,12 +83,12 @@ class BookmarkManager(BrowserApp):
         self.bookmarks_bar = Folder(self.app.bookmarksBar(), self.app)
         self.other_bookmarks = Folder(self.app.otherBookmarks(), self.app)
     
-    def list_all(self, max_depth=None):
+    def list_all(self, max_depth=None, folders_only=False):
         """Display all bookmarks."""
         print(f"📂 Bookmarks Bar")
-        self.bookmarks_bar.list_tree(indent=1, max_depth=max_depth)
+        self.bookmarks_bar.list_tree(indent=1, max_depth=max_depth, folders_only=folders_only)
         print(f"\n📂 Other Bookmarks")
-        self.other_bookmarks.list_tree(indent=1, max_depth=max_depth)
+        self.other_bookmarks.list_tree(indent=1, max_depth=max_depth, folders_only=folders_only)
     
     def search(self, query, limit=50):
         """Search in all bookmarks."""
@@ -372,7 +372,7 @@ class Folder(BrowserApp):
         for item in list(self.folders) + list(self.bookmarks):
             item.delete()
     
-    def list_tree(self, indent=0, max_depth=None):
+    def list_tree(self, indent=0, max_depth=None, folders_only=False):
         """Display the tree structure."""
         if max_depth is not None and indent > max_depth:
             return
@@ -382,11 +382,12 @@ class Folder(BrowserApp):
         # Folders
         for folder in self.folders:
             print(f"{indent_str}📁 {folder.title()}")
-            Folder(folder, self.app).list_tree(indent + 1, max_depth)
+            Folder(folder, self.app).list_tree(indent + 1, max_depth, folders_only)
         
         # Bookmarks
-        for bookmark in self.bookmarks:
-            print(f"{indent_str}🔖 {bookmark.title()} ({bookmark.URL()})")
+        if not folders_only:
+            for bookmark in self.bookmarks:
+                print(f"{indent_str}🔖 {bookmark.title()} ({bookmark.URL()})")
     
     def search(self, query, parent_path=""):
         """Recursive search."""
@@ -459,6 +460,7 @@ def main():
         epilog="""
 Examples:
   %(prog)s list                                    # List all bookmarks (default: Chrome)
+  %(prog)s list --folders                          # List only folders
   %(prog)s -b brave list --depth 2                 # List Brave bookmarks with max depth 2
   %(prog)s search "github"                         # Search for "github" in bookmarks
   %(prog)s add "GitHub" "https://github.com"       # Add bookmark to Bookmarks Bar
@@ -493,6 +495,7 @@ AI Usage:
     # list
     p_list = subparsers.add_parser("list", help="List all bookmarks")
     p_list.add_argument("--depth", type=int, help="Maximum depth to display")
+    p_list.add_argument("--folders", action="store_true", help="List only folders")
     
     # search
     p_search = subparsers.add_parser("search", help="Search for bookmarks by title or URL")
@@ -557,7 +560,7 @@ AI Usage:
             print_safety_warning(manager.browser_name)
         
         if args.action == "list":
-            manager.list_all(max_depth=args.depth)
+            manager.list_all(max_depth=args.depth, folders_only=args.folders)
         elif args.action == "search":
             results = manager.search(args.query, args.limit)
             if not results:
