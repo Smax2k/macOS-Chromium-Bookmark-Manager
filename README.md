@@ -12,6 +12,7 @@ This tool is specifically designed to be used by **AI assistants** (ChatGPT, Cla
 - ✅ **Complete CRUD operations** — Create, Read, Update, Delete
 - ✅ **Structured responses** — Easy to process programmatically
 - ✅ **Safe operations** — No risk of corrupting bookmark files
+- ✅ **Configuration support** — Set default browser preference
 
 ### AI Usage Example
 
@@ -20,21 +21,21 @@ Ask your AI assistant:
 
 The AI can execute:
 ```bash
-python chromium_bookmark_manager.py add "GitHub" "https://github.com" --folder "Bookmarks Bar/Dev"
+.venv/bin/python chromium_bookmark_manager.py add "GitHub" "https://github.com" --folder "Bookmarks Bar/Dev"
 ```
 
 > "Rename my 'Old Project' bookmark to 'Legacy Project'"
 
 ```bash
-python chromium_bookmark_manager.py rename "Old Project" "Legacy Project"
+.venv/bin/python chromium_bookmark_manager.py rename "Old Project" "Legacy Project"
 ```
 
 > "Move all my Python bookmarks to a new folder called 'Python Resources'"
 
 ```bash
-python chromium_bookmark_manager.py create_folder "Bookmarks Bar/Python Resources"
-python chromium_bookmark_manager.py move "Python Docs" "Bookmarks Bar/Python Resources"
-python chromium_bookmark_manager.py move "PyPI" "Bookmarks Bar/Python Resources"
+.venv/bin/python chromium_bookmark_manager.py create_folder "Bookmarks Bar/Python Resources"
+.venv/bin/python chromium_bookmark_manager.py move "Python Docs" "Bookmarks Bar/Python Resources"
+.venv/bin/python chromium_bookmark_manager.py move "PyPI" "Bookmarks Bar/Python Resources"
 ```
 
 ---
@@ -57,6 +58,7 @@ python chromium_bookmark_manager.py move "PyPI" "Bookmarks Bar/Python Resources"
 | `sort` | 📏 Sort folder contents alphabetically ⚠️ |
 | `delete` | 🗑️ Delete a bookmark or folder ⚠️ |
 | `clear` | 🧹 Remove all items from a folder ⚠️ |
+| `config` | ⚙️ Manage configuration (set default browser) |
 
 > ⚠️ Commands marked with ⚠️ require confirmation (can be skipped with `-y` or `--force`)
 
@@ -97,7 +99,8 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 # Install dependencies
-pip install pyobjc-framework-Cocoa pyobjc-framework-ScriptingBridge
+# Install dependencies
+.venv/bin/pip install pyobjc-framework-Cocoa pyobjc-framework-ScriptingBridge
 ```
 
 ---
@@ -107,17 +110,30 @@ pip install pyobjc-framework-Cocoa pyobjc-framework-ScriptingBridge
 ### Quick Start
 
 ```bash
-# Activate virtual environment
-source .venv/bin/activate
-
-# List all bookmarks (default: Chrome)
-python chromium_bookmark_manager.py list
+# List all bookmarks (uses default browser)
+.venv/bin/python chromium_bookmark_manager.py list
 
 # Use a different browser
-python chromium_bookmark_manager.py -b brave list
+.venv/bin/python chromium_bookmark_manager.py -b brave list
+
+# Set a default browser (persisted in config.json)
+.venv/bin/python chromium_bookmark_manager.py config --set-default comet
 
 # Show all supported browsers
-python chromium_bookmark_manager.py browsers
+.venv/bin/python chromium_bookmark_manager.py browsers
+```
+
+### Configuration
+
+You can set a default browser so you don't need to specify `-b` every time.
+This creates a `config.json` file in the script directory.
+
+```bash
+# Set default browser to Brave
+.venv/bin/python chromium_bookmark_manager.py config --set-default brave
+
+# Check current configuration
+.venv/bin/python chromium_bookmark_manager.py config --show
 ```
 
 ### Command Reference
@@ -125,34 +141,34 @@ python chromium_bookmark_manager.py browsers
 #### 📋 List Bookmarks
 ```bash
 # List all bookmarks
-python chromium_bookmark_manager.py list
+.venv/bin/python chromium_bookmark_manager.py list
 
 # Limit depth (useful for large bookmark collections)
-python chromium_bookmark_manager.py list --depth 2
+.venv/bin/python chromium_bookmark_manager.py list --depth 2
 
 # List only folders
-python chromium_bookmark_manager.py list --folders
+.venv/bin/python chromium_bookmark_manager.py list --folders
 
 # List bookmarks in Brave
-python chromium_bookmark_manager.py -b brave list
+.venv/bin/python chromium_bookmark_manager.py -b brave list
 ```
 
 #### 🔍 Search
 ```bash
 # Search by title or URL
-python chromium_bookmark_manager.py search "github"
+.venv/bin/python chromium_bookmark_manager.py search "github"
 
 # Limit results
-python chromium_bookmark_manager.py search "python" --limit 10
+.venv/bin/python chromium_bookmark_manager.py search "python" --limit 10
 ```
 
 #### 📄 Get Details
 ```bash
 # Get info about a bookmark
-python chromium_bookmark_manager.py get "GitHub"
+.venv/bin/python chromium_bookmark_manager.py get "GitHub"
 
 # Get info about a folder
-python chromium_bookmark_manager.py get "Dev"
+.venv/bin/python chromium_bookmark_manager.py get "Dev"
 ```
 
 Output:
@@ -165,46 +181,46 @@ Output:
 #### ➕ Add Bookmark
 ```bash
 # Add to Bookmarks Bar (default)
-python chromium_bookmark_manager.py add "GitHub" "https://github.com"
+.venv/bin/python chromium_bookmark_manager.py add "GitHub" "https://github.com"
 
 # Add to a specific folder
-python chromium_bookmark_manager.py add "Python Docs" "https://docs.python.org" --folder "Bookmarks Bar/Dev/Python"
+.venv/bin/python chromium_bookmark_manager.py add "Python Docs" "https://docs.python.org" --folder "Bookmarks Bar/Dev/Python"
 
 # Add to Other Bookmarks
-python chromium_bookmark_manager.py add "Archive" "https://example.com" --folder "Other Bookmarks/Old"
+.venv/bin/python chromium_bookmark_manager.py add "Archive" "https://example.com" --folder "Other Bookmarks/Old"
 ```
 
 #### 📁 Create Folder
 ```bash
 # Create in Bookmarks Bar
-python chromium_bookmark_manager.py create_folder "Bookmarks Bar/Projects"
+.venv/bin/python chromium_bookmark_manager.py create_folder "Bookmarks Bar/Projects"
 
 # Create nested folders (creates parent folders if needed)
-python chromium_bookmark_manager.py create_folder "Bookmarks Bar/Work/2024/Q1"
+.venv/bin/python chromium_bookmark_manager.py create_folder "Bookmarks Bar/Work/2024/Q1"
 ```
 
 #### ✏️ Rename
 ```bash
 # Rename a bookmark
-python chromium_bookmark_manager.py rename "Old Name" "New Name"
+.venv/bin/python chromium_bookmark_manager.py rename "Old Name" "New Name"
 
 # Rename a folder
-python chromium_bookmark_manager.py rename "Dev" "Development"
+.venv/bin/python chromium_bookmark_manager.py rename "Dev" "Development"
 ```
 
 #### 🔗 Change URL
 ```bash
 # Update the URL of an existing bookmark
-python chromium_bookmark_manager.py set_url "GitHub" "https://github.com/dashboard"
+.venv/bin/python chromium_bookmark_manager.py set_url "GitHub" "https://github.com/dashboard"
 ```
 
 #### 📦 Move Bookmark
 ```bash
 # Move a bookmark to another folder
-python chromium_bookmark_manager.py move "GitHub" "Bookmarks Bar/Dev"
+.venv/bin/python chromium_bookmark_manager.py move "GitHub" "Bookmarks Bar/Dev"
 
 # Move to Other Bookmarks
-python chromium_bookmark_manager.py move "Old Site" "Other Bookmarks/Archive"
+.venv/bin/python chromium_bookmark_manager.py move "Old Site" "Other Bookmarks/Archive"
 ```
 
 #### 📜 Batch Execution (Recipes)
@@ -212,10 +228,10 @@ Execute a list of actions defined in a JSON file.
 
 ```bash
 # Apply a recipe
-python chromium_bookmark_manager.py batch recipe_example.json
+.venv/bin/python chromium_bookmark_manager.py batch recipe_example.json
 
 # Skip confirmation
-python chromium_bookmark_manager.py batch recipe_example.json --force
+.venv/bin/python chromium_bookmark_manager.py batch recipe_example.json --force
 ```
 
 **JSON Format Example (`recipe_example.json`):**
@@ -246,43 +262,43 @@ python chromium_bookmark_manager.py batch recipe_example.json --force
 #### 🗑️ Delete
 ```bash
 # Delete a bookmark (will ask for confirmation)
-python chromium_bookmark_manager.py delete "Old Bookmark"
+.venv/bin/python chromium_bookmark_manager.py delete "Old Bookmark"
 
 # Delete without confirmation (for scripts/AI)
-python chromium_bookmark_manager.py delete "Old Bookmark" -y
+.venv/bin/python chromium_bookmark_manager.py delete "Old Bookmark" -y
 
 # Delete a folder (and all its contents)
-python3 chromium_bookmark_manager.py delete "Temp Folder" --force
+.venv/bin/python chromium_bookmark_manager.py delete "Temp Folder" --force
 ```
 
 #### 🧹 Clear Folder
 ```bash
 # Remove all items from a folder (requires confirmation)
-python3 chromium_bookmark_manager.py clear "Bookmarks Bar/Temp"
+.venv/bin/python chromium_bookmark_manager.py clear "Bookmarks Bar/Temp"
 
 # Clear without confirmation
-python3 chromium_bookmark_manager.py clear "Bookmarks Bar/Temp" -y
+.venv/bin/python chromium_bookmark_manager.py clear "Bookmarks Bar/Temp" -y
 ```
 
 #### 📏 Sort Alphabetically
 ```bash
 # Sort a folder (requires confirmation)
-python chromium_bookmark_manager.py sort "Bookmarks Bar/Archives"
+.venv/bin/python chromium_bookmark_manager.py sort "Bookmarks Bar/Archives"
 
 # Sort without confirmation
-python chromium_bookmark_manager.py sort "Bookmarks Bar/Archives" --force
+.venv/bin/python chromium_bookmark_manager.py sort "Bookmarks Bar/Archives" --force
 ```
 
 #### 🔍 Find Duplicates
 ```bash
 # List all bookmarks sharing the same URL
-python chromium_bookmark_manager.py duplicates
+.venv/bin/python chromium_bookmark_manager.py duplicates
 ```
 
 #### 📦 Bulk Move
 ```bash
 # Move multiple bookmarks to a folder
-python chromium_bookmark_manager.py move_bulk "Bookmarks Bar/Projects" "Project A" "Project B" "Link C"
+.venv/bin/python chromium_bookmark_manager.py move_bulk "Bookmarks Bar/Projects" "Project A" "Project B" "Link C"
 ```
 
 ---
@@ -326,9 +342,10 @@ Changes are IMMEDIATE and PERMANENT.
 ```
 
 To skip confirmation (for automation/AI):
+To skip confirmation (for automation/AI):
 ```bash
-python chromium_bookmark_manager.py delete "Bookmark" -y
-python chromium_bookmark_manager.py clear "Folder" --force
+.venv/bin/python chromium_bookmark_manager.py delete "Bookmark" -y
+.venv/bin/python chromium_bookmark_manager.py clear "Folder" --force
 ```
 
 ### 💾 Recommended Workflow

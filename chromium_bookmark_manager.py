@@ -57,7 +57,27 @@ BROWSERS = {
     },
 }
 
-DEFAULT_BROWSER = "chrome"
+def load_config():
+    """Load configuration from config.json."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, "config.json")
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r') as f:
+                return json.load(f)
+        except:
+            pass
+    return {}
+
+def save_config(config):
+    """Save configuration to config.json."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, "config.json")
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=4)
+
+CONFIG = load_config()
+DEFAULT_BROWSER = CONFIG.get("default_browser", "chrome")
 
 
 class BrowserApp:
@@ -699,7 +719,9 @@ def list_browsers():
     for key, info in BROWSERS.items():
         print(f"  {key:12} - {info['name']}")
         print(f"               Bundle ID: {info['bundle_id']}")
-    print(f"\nDefault browser: {DEFAULT_BROWSER}")
+    
+    source = " (from config.json)" if "default_browser" in CONFIG else " (default)"
+    print(f"\nDefault browser: {DEFAULT_BROWSER}{source}")
 
 
 def confirm_action(message, default=False):
@@ -759,6 +781,7 @@ Examples:
   %(prog)s delete "Old Bookmark"                   # Delete (with confirmation)
   %(prog)s delete "Old Bookmark" -y                # Delete without confirmation
   %(prog)s clear "Bookmarks Bar/Temp" --force      # Clear folder without confirmation
+  %(prog)s config --set-default brave              # Set Brave as default browser
 
 Safety:
   - Modifying commands show a warning to export bookmarks first
@@ -770,10 +793,15 @@ AI Usage:
         """
     )
     
+    # Check config validity
+    if DEFAULT_BROWSER not in BROWSERS:
+         # Fallback if config has invalid browser
+        print(f"⚠️  Configured browser '{DEFAULT_BROWSER}' is not valid. Falling back to 'chrome'.")
+    
     parser.add_argument(
         "-b", "--browser",
         choices=list(BROWSERS.keys()),
-        default=DEFAULT_BROWSER,
+        default=None, # We handle default manually to show proper help message or use config
         help=f"Browser to manage (default: {DEFAULT_BROWSER})"
     )
     
@@ -781,6 +809,11 @@ AI Usage:
     
     # browsers
     subparsers.add_parser("browsers", help="List supported browsers")
+
+    # config
+    p_config = subparsers.add_parser("config", help="Manage configuration")
+    p_config.add_argument("--set-default", choices=list(BROWSERS.keys()), help="Set default browser")
+    p_config.add_argument("--show", action="store_true", help="Show current configuration")
     
     # list
     p_list = subparsers.add_parser("list", help="List bookmarks")
@@ -856,12 +889,31 @@ AI Usage:
         parser.print_help()
         sys.exit(0)
     
+    # Handle Default Browser Logic
+    current_browser = args.browser if args.browser else DEFAULT_BROWSER
+    if current_browser not in BROWSERS:
+        current_browser = "chrome" # Fallback
+
     if args.action == "browsers":
         list_browsers()
-        sys.exit(0)
+        return
+
+    if args.action == "config":
+        if args.set_default:
+            CONFIG["default_browser"] = args.set_default
+            save_config(CONFIG)
+            print(f"✅ Default browser set to: {args.set_default}")
+        else: # --show or no args
+            print("Current Configuration:")
+            print(f"  Default Browser: {DEFAULT_BROWSER}")
+            if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")):
+                 print(f"  Config File: {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')}")
+            else:
+                 print("  Config File: None (using defaults)")
+        return
     
     try:
-        manager = BookmarkManager(args.browser)
+        manager = BookmarkManager(current_browser)
         print(f"🌐 Connected to {manager.browser_name}\n")
         
         # Show warning for commands that modify bookmarks

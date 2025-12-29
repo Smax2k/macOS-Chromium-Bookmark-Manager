@@ -45,3 +45,4 @@ env/
 # Local development
 .env
 .env.local
+config.json
