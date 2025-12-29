@@ -18,6 +18,8 @@ import argparse
 import time
 import html
 import re
+import json
+import os
 
 # Supported Chromium-based browsers and their bundle identifiers
 BROWSERS = {
@@ -386,6 +388,16 @@ class BookmarkManager(BrowserApp):
             print(f"❌ Destination folder '{destination_path}' not found")
             return False
         
+        # Check if already in destination (normalize paths to compare)
+        # location example: "Bookmarks Bar/Folder"
+        # destination_path example: "Bookmarks Bar/Folder/"
+        current_loc_norm = self._normalize(location).lower().strip('/')
+        dest_loc_norm = self._normalize(destination_path).lower().strip('/')
+        
+        if current_loc_norm == dest_loc_norm:
+            print(f"ℹ️  Bookmark '{name}' is already in '{location}' - Skipped")
+            return True
+        
         # Get bookmark info
         title = str(item.title())
         url = str(item.URL())
@@ -398,8 +410,6 @@ class BookmarkManager(BrowserApp):
         
         # Update index if it exists
         if self._index and name in self._index["bookmarks"]:
-            # Simple approach: clear index to force re-indexing or just remove the old entry
-            # For move_bulk, we handle index externally
             pass
             
         print(f"✅ Bookmark '{name}' moved to '{destination_path}'")
@@ -472,6 +482,88 @@ class BookmarkManager(BrowserApp):
         
         print(f"\n📦 Successfully moved {success_count}/{len(names)} items to '{destination_path}'")
         return True
+
+    
+    def process_batch_file(self, file_path, force=False):
+        """Execute a list of actions defined in a JSON file."""
+        if not os.path.exists(file_path):
+            print(f"❌ File '{file_path}' not found")
+            return
+            
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                plan = json.load(f)
+        except json.JSONDecodeError as e:
+            print(f"❌ Invalid JSON file: {e}")
+            return
+            
+        actions = plan.get('actions', [])
+        if not actions:
+            print("⚠️  No actions found in the plan.")
+            return
+            
+        print(f"📋 Batch Plan found: {len(actions)} actions")
+        if 'comment' in plan:
+            print(f"ℹ️  Comment: {plan['comment']}")
+        
+        # Summary of actions
+        summary = {}
+        for act in actions:
+            atype = act.get('action', 'unknown')
+            summary[atype] = summary.get(atype, 0) + 1
+            
+        print("\nSummary of operations:")
+        for atype, count in summary.items():
+            print(f"  - {atype}: {count}")
+            
+        if not force and not confirm_action("Execute this plan?"):
+            return
+
+        print("\n🚀 Executing plan...")
+        
+        # Mapping action names to methods
+        # Lambda wrappers to map JSON args to method args
+        action_map = {
+            "create_folder": lambda m, a: m.create_folder(a.get('path')),
+            "add": lambda m, a: m.add_bookmark(a.get('title'), a.get('url'), a.get('folder')),
+            "move": lambda m, a: m.move_item(a.get('name'), a.get('destination')),
+            "move_bulk": lambda m, a: m.move_bulk(a.get('items'), a.get('destination')),
+            "rename": lambda m, a: m.rename_item(a.get('name'), a.get('new_name')),
+            "set_url": lambda m, a: m.set_url(a.get('name'), a.get('new_url')),
+            "delete": lambda m, a: m.delete_item(a.get('name')),
+            "clear": lambda m, a: m.clear_folder(a.get('folder')),
+            "sort": lambda m, a: m.sort_folder(a.get('folder'))
+        }
+
+        success_count = 0
+        for i, action_data in enumerate(actions, 1):
+            action_type = action_data.get('action')
+            if action_type not in action_map:
+                print(f"⚠️  Action {i}: Unknown action type '{action_type}' - Skipped")
+                continue
+                
+            print(f"\n[Action {i}/{len(actions)}] {action_type.upper()}")
+            try:
+                # Execute the action
+                # We check for specific 'force' flags in args if needed, but usually batch implies force for confirmations
+                # For safety, destructive single actions in batch still use the manager's methods which print logs.
+                # However, confirm_action inside methods (like delete) might block.
+                # We need to consider if we want to bypass individual confirmations in batch mode.
+                # Since we confirmed the WHOLE plan at start, we should probably simulate force=True for individual actions?
+                # But our methods don't all take force param. 'delete' and 'clear' do via CLI args but methods like delete_item don't ask, they just do.
+                # The CLI wrapper asks. The methods in BookmarkManager class DO NOT ask confirmation (except implicitly via being called).
+                # Wait, confirm_action is in main(), logic is: if confirm... manager.delete_item(). 
+                # So manager methods are already direct. Safe.
+                
+                action_map[action_type](self, action_data)
+                success_count += 1
+            except Exception as e:
+                print(f"❌ Error executing action {i}: {e}")
+                if not confirm_action("Continue to next action?", default=True):
+                    print("🛑 Execution stopped by user.")
+                    break
+        
+        print(f"\n✨ Batch processing completed. {success_count}/{len(actions)} actions successful.")
 
     def sort_folder(self, folder_path):
         """Sort items in a folder alphabetically."""
@@ -753,6 +845,11 @@ AI Usage:
     p_sort.add_argument("folder", help="Folder path to sort")
     p_sort.add_argument("-y", "--force", action="store_true", help="Skip confirmation prompt")
     
+    # batch
+    p_batch = subparsers.add_parser("batch", help="Execute actions from a JSON file")
+    p_batch.add_argument("file", help="Path to the JSON plan file")
+    p_batch.add_argument("-y", "--force", action="store_true", help="Skip confirmation prompt")
+    
     args = parser.parse_args()
     
     if not args.action:
@@ -795,14 +892,14 @@ AI Usage:
             # Confirmation required for delete
             if args.force or confirm_action(f"Do you really want to delete '{args.name}'?"):
                 manager.delete_item(args.name)
-            else:
-                print("❌ Operation cancelled.")
         elif args.action == "clear":
             # Confirmation required for clear
-            if args.force or confirm_action(f"Do you really want to CLEAR folder '{args.folder}'? This action is IRREVERSIBLE!"):
+            if args.force or confirm_action(f"Do you really want to CLEAR all items in '{args.folder}'?"):
                 manager.clear_folder(args.folder)
             else:
                 print("❌ Operation cancelled.")
+        elif args.action == "batch":
+            manager.process_batch_file(args.file, args.force)
         elif args.action == "duplicates":
             manager.find_duplicates()
         elif args.action == "move_bulk":

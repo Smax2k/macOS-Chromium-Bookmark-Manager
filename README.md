@@ -52,6 +52,7 @@ python chromium_bookmark_manager.py move "PyPI" "Bookmarks Bar/Python Resources"
 | `set_url` | 🔗 Change the URL of a bookmark |
 | `move` | 📦 Move a bookmark to another folder |
 | `move_bulk` | 📦 Move multiple bookmarks at once |
+| `batch` | 📜 Execute actions from a JSON file |
 | `duplicates` | 🔍 Find bookmarks sharing the same URL |
 | `sort` | 📏 Sort folder contents alphabetically ⚠️ |
 | `delete` | 🗑️ Delete a bookmark or folder ⚠️ |
@@ -205,6 +206,42 @@ python chromium_bookmark_manager.py move "GitHub" "Bookmarks Bar/Dev"
 # Move to Other Bookmarks
 python chromium_bookmark_manager.py move "Old Site" "Other Bookmarks/Archive"
 ```
+
+#### 📜 Batch Execution (Recipes)
+Execute a list of actions defined in a JSON file.
+
+```bash
+# Apply a recipe
+python chromium_bookmark_manager.py batch my_recipe.json
+
+# Skip confirmation
+python chromium_bookmark_manager.py batch my_recipe.json --force
+```
+
+**JSON Format Example (`my_recipe.json`):**
+
+```json
+{
+  "comment": "Monthly cleanup",
+  "actions": [
+    {
+      "action": "create_folder",
+      "path": "Bookmarks Bar/New Projects"
+    },
+    {
+      "action": "move_bulk",
+      "destination": "Bookmarks Bar/New Projects",
+      "items": ["Project A", "Project B"]
+    },
+    {
+      "action": "delete",
+      "name": "Bookmarks Bar/Temp"
+    }
+  ]
+}
+```
+
+**Supported Actions:** `create_folder`, `add`, `move`, `move_bulk`, `rename`, `set_url`, `delete`, `clear`, `sort`.
 
 #### 🗑️ Delete
 ```bash
