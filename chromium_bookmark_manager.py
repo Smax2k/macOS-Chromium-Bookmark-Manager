@@ -547,22 +547,22 @@ def confirm_action(message, default=False):
 def print_safety_warning(browser_name):
     """Print a safety warning before destructive operations."""
     print("=" * 60)
-    print("⚠️  ATTENTION - MODIFICATION DIRECTE DES FAVORIS")
+    print("⚠️  WARNING - DIRECT BOOKMARK MODIFICATION")
     print("=" * 60)
-    print(f"Vous allez modifier les favoris de {browser_name}.")
-    print("Les changements sont IMMÉDIATS et PERMANENTS.")
+    print(f"You are about to modify bookmarks in {browser_name}.")
+    print("Changes are IMMEDIATE and PERMANENT.")
     print("")
-    print("💡 RECOMMANDATION: Exportez vos favoris avant de continuer !")
-    print(f"   Dans {browser_name}: Menu > Favoris > Gestionnaire de favoris")
-    print("   Puis: ⋮ > Exporter les favoris")
+    print("💡 RECOMMENDATION: Export your bookmarks before continuing!")
+    print(f"   In {browser_name}: Menu > Bookmarks > Bookmark Manager")
+    print("   Then: ⋮ > Export bookmarks")
     print("=" * 60)
     print("")
 
 
-# Commandes qui modifient les favoris (nécessitent un avertissement)
+# Commands that modify bookmarks (require a warning)
 MODIFYING_COMMANDS = ["add", "create_folder", "rename", "set_url", "move", "delete", "clear", "move_bulk", "sort"]
 
-# Commandes dangereuses qui nécessitent une confirmation
+# Dangerous commands that require confirmation
 DANGEROUS_COMMANDS = ["delete", "clear", "sort"]
 
 
@@ -682,7 +682,7 @@ AI Usage:
         manager = BookmarkManager(args.browser)
         print(f"🌐 Connected to {manager.browser_name}\n")
         
-        # Afficher l'avertissement pour les commandes qui modifient les favoris
+        # Show warning for commands that modify bookmarks
         if args.action in MODIFYING_COMMANDS:
             print_safety_warning(manager.browser_name)
         
@@ -707,27 +707,27 @@ AI Usage:
         elif args.action == "move":
             manager.move_item(args.name, args.destination)
         elif args.action == "delete":
-            # Confirmation requise pour delete
-            if args.force or confirm_action(f"Voulez-vous vraiment supprimer '{args.name}' ?"):
+            # Confirmation required for delete
+            if args.force or confirm_action(f"Do you really want to delete '{args.name}'?"):
                 manager.delete_item(args.name)
             else:
-                print("❌ Opération annulée.")
+                print("❌ Operation cancelled.")
         elif args.action == "clear":
-            # Confirmation requise pour clear
-            if args.force or confirm_action(f"Voulez-vous vraiment VIDER le dossier '{args.folder}' ? Cette action est IRRÉVERSIBLE !"):
+            # Confirmation required for clear
+            if args.force or confirm_action(f"Do you really want to CLEAR folder '{args.folder}'? This action is IRREVERSIBLE!"):
                 manager.clear_folder(args.folder)
             else:
-                print("❌ Opération annulée.")
+                print("❌ Operation cancelled.")
         elif args.action == "duplicates":
             manager.find_duplicates()
         elif args.action == "move_bulk":
             manager.move_bulk(args.names, args.destination)
         elif args.action == "sort":
-            # Le tri est considéré comme dangereux car il recrée les items (clear + add)
-            if args.force or confirm_action(f"Voulez-vous vraiment TRIER le dossier '{args.folder}' ?"):
+            # Sorting is considered dangerous as it recreates items (clear + add)
+            if args.force or confirm_action(f"Do you really want to SORT folder '{args.folder}'?"):
                 manager.sort_folder(args.folder)
             else:
-                print("❌ Opération annulée.")
+                print("❌ Operation cancelled.")
             
     except Exception as e:
         print(f"❌ Error: {e}")

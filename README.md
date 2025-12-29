@@ -269,23 +269,23 @@ When running any command that modifies bookmarks (`add`, `delete`, `rename`, etc
 
 ```
 ============================================================
-⚠️  ATTENTION - MODIFICATION DIRECTE DES FAVORIS
+⚠️  WARNING - DIRECT BOOKMARK MODIFICATION
 ============================================================
-Vous allez modifier les favoris de Google Chrome.
-Les changements sont IMMÉDIATS et PERMANENTS.
+You are about to modify bookmarks in Google Chrome.
+Changes are IMMEDIATE and PERMANENT.
 
-💡 RECOMMANDATION: Exportez vos favoris avant de continuer !
-   Dans Google Chrome: Menu > Favoris > Gestionnaire de favoris
-   Puis: ⋮ > Exporter les favoris
+💡 RECOMMENDATION: Export your bookmarks before continuing!
+   In Google Chrome: Menu > Bookmarks > Bookmark Manager
+   Then: ⋮ > Export bookmarks
 ============================================================
 ```
 
 ### 🔐 Confirmation for Dangerous Commands
 
-`delete` and `clear` require confirmation:
+`delete`, `clear`, and `sort` require confirmation:
 
 ```
-⚠️  Voulez-vous vraiment supprimer 'My Bookmark' ? [y/N]: 
+⚠️  Do you really want to delete 'My Bookmark'? [y/N]: 
 ```
 
 To skip confirmation (for automation/AI):
