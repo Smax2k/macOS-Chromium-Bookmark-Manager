@@ -16,6 +16,8 @@ from ScriptingBridge import SBApplication
 import sys
 import argparse
 import time
+import html
+import re
 
 # Supported Chromium-based browsers and their bundle identifiers
 BROWSERS = {
@@ -83,6 +85,38 @@ class BookmarkManager(BrowserApp):
         super().__init__(browser_key)
         self.bookmarks_bar = Folder(self.app.bookmarksBar(), self.app)
         self.other_bookmarks = Folder(self.app.otherBookmarks(), self.app)
+        self._index = None  # Cache local pour la session
+    
+    def index_bookmarks(self):
+        """Index all bookmarks in memory for fast lookup."""
+        print("🔍 Indexing bookmarks for faster processing...")
+        start_time = time.time()
+        self._index = {"bookmarks": {}, "folders": {}}
+        
+        def collect(folder, path):
+            # Index current folder
+            f_title = self._normalize(folder.title())
+            if f_title not in self._index["folders"]:
+                self._index["folders"][f_title] = []
+            self._index["folders"][f_title].append((folder, path))
+            
+            # Index bookmarks in this folder
+            for b in folder.bookmarks:
+                b_title = self._normalize(b.title())
+                if b_title not in self._index["bookmarks"]:
+                    self._index["bookmarks"][b_title] = []
+                self._index["bookmarks"][b_title].append((b, path))
+            
+            # Recurse into subfolders
+            for f in folder.folders:
+                collect(Folder(f, self.app), f"{path}/{str(f.title())}")
+        
+        collect(self.bookmarks_bar, "Bookmarks Bar")
+        collect(self.other_bookmarks, "Other Bookmarks")
+        
+        duration = time.time() - start_time
+        count = sum(len(v) for v in self._index["bookmarks"].values())
+        print(f"✨ Indexed {count} bookmarks in {duration:.2f}s")
     
     def list_all(self, folder_path=None, max_depth=None, folders_only=False):
         """Display bookmarks."""
@@ -187,29 +221,56 @@ class BookmarkManager(BrowserApp):
         
         return target
     
+    def _normalize(self, text):
+        """Normalize whitespace, decode HTML entities, and remove hidden characters."""
+        if not text:
+            return ""
+        # Decode entities
+        temp = html.unescape(str(text))
+        # Remove zero-width characters and control chars (like \u200e)
+        temp = re.sub(r'[\u200b-\u200f\uFEFF\u202a-\u202e]', '', temp)
+        # Normalize whitespace
+        return " ".join(temp.split())
+
     def _find_item(self, name, item_type="both"):
-        """Find a bookmark or folder by name recursively. Returns (item, location, type)."""
+        """Find a bookmark or folder by name. Uses index if available."""
+        target_name = self._normalize(name)
         
+        # Use index if available (MUCH faster)
+        if self._index:
+            results = []
+            if item_type in ["both", "bookmark"] and target_name in self._index["bookmarks"]:
+                for item, loc in self._index["bookmarks"][target_name]:
+                    results.append((item, loc, "bookmark"))
+            if item_type in ["both", "folder"] and target_name in self._index["folders"]:
+                for item, loc in self._index["folders"][target_name]:
+                    # The root folders (Bookmarks Bar/Other Bookmarks) don't have titles in the same way
+                    # but they are in the folders index if collected.
+                    results.append((item, loc, "folder"))
+            
+            if results:
+                # Prioritize shorter paths (closer to root)
+                results.sort(key=lambda x: len(x[1].split('/')))
+                return results[0]
+            return (None, None, None)
+
+        # Fallback to recursive scan if no index
         def search_recursive(folder, folder_name):
             # Check bookmarks in this folder
             if item_type in ["both", "bookmark"]:
-                item = folder.get_bookmark(name)
-                if item:
-                    return (item, folder_name, "bookmark")
+                for b in folder.bookmarks:
+                    if self._normalize(b.title()) == target_name:
+                        return (b, folder_name, "bookmark")
             
-            # Check if this folder itself matches
-            if item_type in ["both", "folder"] and folder.title() == name:
-                 # This is tricky because we need the parent to return it properly
-                 # For now, let's prioritize subfolders
-                 pass
-
             # Check subfolders
             for f in folder.folders:
-                f_title = str(f.title())
-                if item_type in ["both", "folder"] and f_title == name:
+                f_title_raw = str(f.title())
+                f_title = self._normalize(f_title_raw)
+                
+                if item_type in ["both", "folder"] and f_title == target_name:
                     return (Folder(f, self.app), folder_name, "folder")
                 
-                res = search_recursive(Folder(f, self.app), f"{folder_name}/{f_title}")
+                res = search_recursive(Folder(f, self.app), f"{folder_name}/{f_title_raw}")
                 if res[0]:
                     return res
             
@@ -313,7 +374,7 @@ class BookmarkManager(BrowserApp):
         return True
     
     def move_item(self, name, destination_path):
-        """Move a bookmark to another folder."""
+        """Move a bookmark to another folder safely."""
         item, location, item_type = self._find_item(name, "bookmark")
         
         if not item:
@@ -325,14 +386,22 @@ class BookmarkManager(BrowserApp):
             print(f"❌ Destination folder '{destination_path}' not found")
             return False
         
-        # Get bookmark info before deletion
+        # Get bookmark info
         title = str(item.title())
         url = str(item.URL())
         
-        # Delete from original location and add to new one
-        item.delete()
+        # Step 1: Add to destination FIRST (safe)
         destination.add_bookmark(title, url)
         
+        # Step 2: Delete from original
+        item.delete()
+        
+        # Update index if it exists
+        if self._index and name in self._index["bookmarks"]:
+            # Simple approach: clear index to force re-indexing or just remove the old entry
+            # For move_bulk, we handle index externally
+            pass
+            
         print(f"✅ Bookmark '{name}' moved to '{destination_path}'")
         return True
     
@@ -374,7 +443,11 @@ class BookmarkManager(BrowserApp):
             print()
 
     def move_bulk(self, names, destination_path):
-        """Move multiple bookmarks to a destination folder."""
+        """Move multiple bookmarks efficiently using index."""
+        # Index everything once
+        if not self._index:
+            self.index_bookmarks()
+            
         destination = self._resolve_path(destination_path)
         if not destination:
             print(f"❌ Destination folder '{destination_path}' not found")
@@ -386,12 +459,16 @@ class BookmarkManager(BrowserApp):
             if item:
                 title = str(item.title())
                 url = str(item.URL())
-                item.delete()
+                # Add then delete
                 destination.add_bookmark(title, url)
-                print(f"✅ Moved '{title}'")
+                item.delete()
+                print(f"  ✅ Moved '{html.unescape(title)}'")
                 success_count += 1
             else:
-                print(f"⚠️ Bookmark '{name}' not found")
+                print(f"  ⚠️ Bookmark '{name}' not found")
+        
+        # Reset index as structure has changed
+        self._index = None
         
         print(f"\n📦 Successfully moved {success_count}/{len(names)} items to '{destination_path}'")
         return True
@@ -446,7 +523,7 @@ class Folder(BrowserApp):
         self.bookmarks = self.root.bookmarkItems()
     
     def title(self):
-        return str(self.root.title())
+        return html.unescape(str(self.root.title()))
     
     def set_title(self, title):
         self.root.setTitle_(title)
@@ -494,13 +571,15 @@ class Folder(BrowserApp):
         
         # Folders
         for folder in self.folders:
-            print(f"{indent_str}📁 {folder.title()}")
+            title = html.unescape(str(folder.title()))
+            print(f"{indent_str}📁 {title}")
             Folder(folder, self.app).list_tree(indent + 1, max_depth, folders_only)
         
         # Bookmarks
         if not folders_only:
             for bookmark in self.bookmarks:
-                print(f"{indent_str}🔖 {bookmark.title()} ({bookmark.URL()})")
+                title = html.unescape(str(bookmark.title()))
+                print(f"{indent_str}🔖 {title} ({bookmark.URL()})")
     
     def search(self, query, parent_path=""):
         """Recursive search."""
@@ -508,13 +587,13 @@ class Folder(BrowserApp):
         query_lower = query.lower()
         
         for bookmark in self.bookmarks:
-            title = str(bookmark.title())
+            title = html.unescape(str(bookmark.title()))
             url = str(bookmark.URL())
             if query_lower in title.lower() or query_lower in url.lower():
                 results.append(f"🔖 {title} ({url}) [In: {parent_path}]")
         
         for folder in self.folders:
-            folder_title = str(folder.title())
+            folder_title = html.unescape(str(folder.title()))
             if query_lower in folder_title.lower():
                 results.append(f"📁 [Folder] {folder_title} [In: {parent_path}]")
             results.extend(Folder(folder, self.app).search(query, f"{parent_path}/{folder_title}"))
