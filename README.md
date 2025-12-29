@@ -1,17 +1,60 @@
 # 🔖 Chromium Bookmark Manager
 
-A powerful command-line tool for managing bookmarks in Chromium-based browsers on **macOS** using ScriptingBridge.
+A powerful command-line tool for managing bookmarks in **Chromium-based browsers** on macOS using ScriptingBridge.
 
-> **Direct manipulation** of bookmarks without import/export — changes appear instantly in your browser!
+> **Direct manipulation** of bookmarks without import/export — changes appear **instantly** in your browser!
+
+## 🤖 Perfect for AI Assistants
+
+This tool is specifically designed to be used by **AI assistants** (ChatGPT, Claude, Gemini, etc.) to help you organize your bookmarks through natural language commands. The CLI provides:
+
+- ✅ **Clear, parseable output** — Success/error messages for automation
+- ✅ **Complete CRUD operations** — Create, Read, Update, Delete
+- ✅ **Structured responses** — Easy to process programmatically
+- ✅ **Safe operations** — No risk of corrupting bookmark files
+
+### AI Usage Example
+
+Ask your AI assistant:
+> "Add a bookmark for GitHub to my Dev folder in Chrome"
+
+The AI can execute:
+```bash
+python chromium_bookmark_manager.py add "GitHub" "https://github.com" --folder "Bookmarks Bar/Dev"
+```
+
+> "Rename my 'Old Project' bookmark to 'Legacy Project'"
+
+```bash
+python chromium_bookmark_manager.py rename "Old Project" "Legacy Project"
+```
+
+> "Move all my Python bookmarks to a new folder called 'Python Resources'"
+
+```bash
+python chromium_bookmark_manager.py create_folder "Bookmarks Bar/Python Resources"
+python chromium_bookmark_manager.py move "Python Docs" "Bookmarks Bar/Python Resources"
+python chromium_bookmark_manager.py move "PyPI" "Bookmarks Bar/Python Resources"
+```
+
+---
 
 ## ✨ Features
 
-- 📋 **List** all bookmarks with customizable depth
-- 🔍 **Search** bookmarks by title or URL
-- ➕ **Add** bookmarks to any folder
-- 📁 **Create** new bookmark folders
-- 🗑️ **Delete** bookmarks or folders
-- 🌐 **Multi-browser support** — works with 8+ Chromium browsers
+| Command | Description |
+|---------|-------------|
+| `list` | 📋 List all bookmarks with tree structure |
+| `search` | 🔍 Search bookmarks by title or URL |
+| `get` | 📄 Get details of a specific bookmark or folder |
+| `add` | ➕ Add a new bookmark |
+| `create_folder` | 📁 Create a new folder |
+| `rename` | ✏️ Rename a bookmark or folder |
+| `set_url` | 🔗 Change the URL of a bookmark |
+| `move` | 📦 Move a bookmark to another folder |
+| `delete` | 🗑️ Delete a bookmark or folder |
+| `clear` | 🧹 Remove all items from a folder |
+
+---
 
 ## 🌐 Supported Browsers
 
@@ -25,6 +68,8 @@ A powerful command-line tool for managing bookmarks in Chromium-based browsers o
 | Comet (Perplexity) | `comet` | `ai.perplexity.comet` |
 | Opera | `opera` | `com.operasoftware.Opera` |
 | Chromium | `chromium` | `org.chromium.Chromium` |
+
+---
 
 ## 📦 Installation
 
@@ -49,12 +94,14 @@ source .venv/bin/activate
 pip install pyobjc-framework-Cocoa pyobjc-framework-ScriptingBridge
 ```
 
+---
+
 ## 🚀 Usage
 
-### Basic Commands
+### Quick Start
 
 ```bash
-# Activate virtual environment (required before running)
+# Activate virtual environment
 source .venv/bin/activate
 
 # List all bookmarks (default: Chrome)
@@ -62,94 +109,237 @@ python chromium_bookmark_manager.py list
 
 # Use a different browser
 python chromium_bookmark_manager.py -b brave list
-python chromium_bookmark_manager.py -b edge list
 
-# Show supported browsers
+# Show all supported browsers
 python chromium_bookmark_manager.py browsers
 ```
 
 ### Command Reference
 
-| Action | Command | Description |
-|--------|---------|-------------|
-| **List** | `python chromium_bookmark_manager.py list [--depth N]` | Display all bookmarks |
-| **Search** | `python chromium_bookmark_manager.py search "term"` | Search in bookmarks |
-| **Add** | `python chromium_bookmark_manager.py add "Title" "URL" [--folder "Path"]` | Add a bookmark |
-| **Create Folder** | `python chromium_bookmark_manager.py create_folder "Path/To/Folder"` | Create a folder |
-| **Delete** | `python chromium_bookmark_manager.py delete "Name"` | Delete an item |
-| **Browsers** | `python chromium_bookmark_manager.py browsers` | List supported browsers |
-
-### Examples
-
+#### 📋 List Bookmarks
 ```bash
-# List bookmarks in Brave with max depth of 2
-python chromium_bookmark_manager.py -b brave list --depth 2
+# List all bookmarks
+python chromium_bookmark_manager.py list
 
-# Search for "github" in Edge
-python chromium_bookmark_manager.py -b edge search "github"
+# Limit depth (useful for large bookmark collections)
+python chromium_bookmark_manager.py list --depth 2
 
-# Add a bookmark to Chrome
+# List bookmarks in Brave
+python chromium_bookmark_manager.py -b brave list
+```
+
+#### 🔍 Search
+```bash
+# Search by title or URL
+python chromium_bookmark_manager.py search "github"
+
+# Limit results
+python chromium_bookmark_manager.py search "python" --limit 10
+```
+
+#### 📄 Get Details
+```bash
+# Get info about a bookmark
+python chromium_bookmark_manager.py get "GitHub"
+
+# Get info about a folder
+python chromium_bookmark_manager.py get "Dev"
+```
+
+Output:
+```
+🔖 Bookmark: GitHub
+   URL: https://github.com
+   Location: Bookmarks Bar
+```
+
+#### ➕ Add Bookmark
+```bash
+# Add to Bookmarks Bar (default)
 python chromium_bookmark_manager.py add "GitHub" "https://github.com"
 
-# Add bookmark to a specific folder in Brave
-python chromium_bookmark_manager.py -b brave add "Docs" "https://docs.python.org" --folder "Bookmarks Bar/Dev"
+# Add to a specific folder
+python chromium_bookmark_manager.py add "Python Docs" "https://docs.python.org" --folder "Bookmarks Bar/Dev/Python"
 
-# Create a new folder in Arc
-python chromium_bookmark_manager.py -b arc create_folder "Bookmarks Bar/Projects/2024"
-
-# Delete a bookmark from Vivaldi
-python chromium_bookmark_manager.py -b vivaldi delete "Old Bookmark"
+# Add to Other Bookmarks
+python chromium_bookmark_manager.py add "Archive" "https://example.com" --folder "Other Bookmarks/Old"
 ```
+
+#### 📁 Create Folder
+```bash
+# Create in Bookmarks Bar
+python chromium_bookmark_manager.py create_folder "Bookmarks Bar/Projects"
+
+# Create nested folders (creates parent folders if needed)
+python chromium_bookmark_manager.py create_folder "Bookmarks Bar/Work/2024/Q1"
+```
+
+#### ✏️ Rename
+```bash
+# Rename a bookmark
+python chromium_bookmark_manager.py rename "Old Name" "New Name"
+
+# Rename a folder
+python chromium_bookmark_manager.py rename "Dev" "Development"
+```
+
+#### 🔗 Change URL
+```bash
+# Update the URL of an existing bookmark
+python chromium_bookmark_manager.py set_url "GitHub" "https://github.com/dashboard"
+```
+
+#### 📦 Move Bookmark
+```bash
+# Move a bookmark to another folder
+python chromium_bookmark_manager.py move "GitHub" "Bookmarks Bar/Dev"
+
+# Move to Other Bookmarks
+python chromium_bookmark_manager.py move "Old Site" "Other Bookmarks/Archive"
+```
+
+#### 🗑️ Delete
+```bash
+# Delete a bookmark
+python chromium_bookmark_manager.py delete "Old Bookmark"
+
+# Delete a folder (and all its contents)
+python chromium_bookmark_manager.py delete "Temp Folder"
+```
+
+#### 🧹 Clear Folder
+```bash
+# Remove all items from a folder (keeps the folder)
+python chromium_bookmark_manager.py clear "Bookmarks Bar/Temp"
+```
+
+---
 
 ## 🔧 How It Works
 
 This tool uses **ScriptingBridge** (macOS's AppleScript bridge for Python) to communicate directly with Chromium-based browsers. Since all Chromium browsers share a similar scripting dictionary, the same commands work across all supported browsers.
 
+### Architecture
+
+```
+┌─────────────────────┐
+│   Your Terminal     │
+│   or AI Assistant   │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│  chromium_bookmark  │
+│     _manager.py     │
+└──────────┬──────────┘
+           │ ScriptingBridge
+           ▼
+┌─────────────────────┐
+│  Chrome / Brave /   │
+│  Edge / Arc / ...   │
+└─────────────────────┘
+```
+
 ### Why ScriptingBridge?
 
-- ⚡ **Instant updates** — no need to reload the browser
-- 🔒 **Safe** — uses the browser's official scripting API
-- 🔄 **Real-time** — changes are reflected immediately
-- 📁 **No file manipulation** — no risk of corrupting bookmark files
+| Approach | Pros | Cons |
+|----------|------|------|
+| **ScriptingBridge** ✅ | Instant updates, safe, real-time | macOS only |
+| File manipulation | Cross-platform | Risk of corruption, requires browser restart |
+| Browser extension | Cross-platform | Complex setup, security concerns |
+
+---
 
 ## ⚠️ Troubleshooting
 
 ### "Browser is not installed or not accessible"
 
 Make sure the browser is:
-1. Installed on your system
-2. Has been opened at least once
-3. Is not blocked by macOS security settings
+1. ✅ Installed on your system
+2. ✅ Has been opened at least once
+3. ✅ Is allowed in macOS security settings
 
 ### Permission Issues
 
-On first run, macOS may ask for permission to control the browser. Go to:
+On first run, macOS may ask for permission. Go to:
+
 **System Preferences → Security & Privacy → Privacy → Automation**
 
 Grant Python/Terminal access to control your browser.
 
 ### Browser Not Listed
 
-If your Chromium-based browser isn't listed, you can find its bundle ID with:
-
+Find your browser's bundle ID:
 ```bash
 osascript -e 'id of app "YourBrowserName"'
 ```
 
-Then modify the `BROWSERS` dictionary in the script.
+Then add it to the `BROWSERS` dictionary in the script.
+
+---
+
+## 🐍 Python API
+
+You can also use this as a Python library:
+
+```python
+from chromium_bookmark_manager import BookmarkManager
+
+# Connect to Chrome (default)
+manager = BookmarkManager()
+
+# Or connect to another browser
+manager = BookmarkManager("brave")
+
+# List bookmarks
+manager.list_all(max_depth=2)
+
+# Search
+results = manager.search("github")
+
+# Add bookmark
+manager.add_bookmark("GitHub", "https://github.com", "Bookmarks Bar/Dev")
+
+# Rename
+manager.rename_item("Old Name", "New Name")
+
+# Change URL
+manager.set_url("GitHub", "https://github.com/new")
+
+# Move
+manager.move_item("GitHub", "Bookmarks Bar/Archive")
+
+# Get details
+info = manager.get_item("GitHub")
+print(info)  # {'type': 'bookmark', 'title': 'GitHub', 'url': '...', 'location': '...'}
+
+# Delete
+manager.delete_item("Old Bookmark")
+
+# Clear folder
+manager.clear_folder("Bookmarks Bar/Temp")
+```
+
+---
 
 ## 🤝 Contributing
 
 Contributions are welcome! Feel free to:
-- Add support for more browsers
-- Improve error handling
-- Add new features (export, import, sync, etc.)
+- 🌐 Add support for more browsers
+- 🐛 Improve error handling
+- ✨ Add new features (export, import, sync, etc.)
+- 📚 Improve documentation
+
+---
 
 ## 📄 License
 
 MIT License - feel free to use this in your own projects!
 
+---
+
 ## 🙏 Acknowledgments
 
 - Built with [PyObjC](https://pypi.org/project/pyobjc/)
-- Inspired by the need for a fast, CLI-based bookmark manager
+- Inspired by [pybookmarks](https://github.com/nicholasRutworworthy/pybookmarks) concept
+- Designed for seamless AI assistant integration
