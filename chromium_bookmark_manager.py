@@ -84,12 +84,20 @@ class BookmarkManager(BrowserApp):
         self.bookmarks_bar = Folder(self.app.bookmarksBar(), self.app)
         self.other_bookmarks = Folder(self.app.otherBookmarks(), self.app)
     
-    def list_all(self, max_depth=None, folders_only=False):
-        """Display all bookmarks."""
-        print(f"📂 Bookmarks Bar")
-        self.bookmarks_bar.list_tree(indent=1, max_depth=max_depth, folders_only=folders_only)
-        print(f"\n📂 Other Bookmarks")
-        self.other_bookmarks.list_tree(indent=1, max_depth=max_depth, folders_only=folders_only)
+    def list_all(self, folder_path=None, max_depth=None, folders_only=False):
+        """Display bookmarks."""
+        if folder_path:
+            target = self._resolve_path(folder_path)
+            if not target:
+                print(f"❌ Folder '{folder_path}' not found")
+                return
+            print(f"📂 {folder_path}")
+            target.list_tree(indent=1, max_depth=max_depth, folders_only=folders_only)
+        else:
+            print(f"📂 Bookmarks Bar")
+            self.bookmarks_bar.list_tree(indent=1, max_depth=max_depth, folders_only=folders_only)
+            print(f"\n📂 Other Bookmarks")
+            self.other_bookmarks.list_tree(indent=1, max_depth=max_depth, folders_only=folders_only)
     
     def search(self, query, limit=50):
         """Search in all bookmarks."""
@@ -598,7 +606,8 @@ AI Usage:
     subparsers.add_parser("browsers", help="List supported browsers")
     
     # list
-    p_list = subparsers.add_parser("list", help="List all bookmarks")
+    p_list = subparsers.add_parser("list", help="List bookmarks")
+    p_list.add_argument("folder", nargs="?", help="Specific folder to list")
     p_list.add_argument("--depth", type=int, help="Maximum depth to display")
     p_list.add_argument("--folders", action="store_true", help="List only folders")
     
@@ -678,7 +687,7 @@ AI Usage:
             print_safety_warning(manager.browser_name)
         
         if args.action == "list":
-            manager.list_all(max_depth=args.depth, folders_only=args.folders)
+            manager.list_all(folder_path=args.folder, max_depth=args.depth, folders_only=args.folders)
         elif args.action == "search":
             results = manager.search(args.query, args.limit)
             if not results:

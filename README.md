@@ -51,9 +51,9 @@ python chromium_bookmark_manager.py move "PyPI" "Bookmarks Bar/Python Resources"
 | `rename` | ✏️ Rename a bookmark or folder |
 | `set_url` | 🔗 Change the URL of a bookmark |
 | `move` | 📦 Move a bookmark to another folder |
-| `move_bulk` | 📦 Déplacer plusieurs favoris à la fois |
-| `duplicates` | 🔍 Rechercher les favoris avec la même URL |
-| `sort` | 📏 Trier alphabétiquement un dossier ⚠️ |
+| `move_bulk` | 📦 Move multiple bookmarks at once |
+| `duplicates` | 🔍 Find bookmarks sharing the same URL |
+| `sort` | 📏 Sort folder contents alphabetically ⚠️ |
 | `delete` | 🗑️ Delete a bookmark or folder ⚠️ |
 | `clear` | 🧹 Remove all items from a folder ⚠️ |
 
@@ -227,35 +227,35 @@ python3 chromium_bookmark_manager.py clear "Bookmarks Bar/Temp"
 python3 chromium_bookmark_manager.py clear "Bookmarks Bar/Temp" -y
 ```
 
-#### 📏 Tri Alphabétique
+#### 📏 Sort Alphabetically
 ```bash
-# Trier un dossier (demande confirmation)
+# Sort a folder (requires confirmation)
 python chromium_bookmark_manager.py sort "Bookmarks Bar/Archives"
 
-# Trier sans confirmation
+# Sort without confirmation
 python chromium_bookmark_manager.py sort "Bookmarks Bar/Archives" --force
 ```
 
-#### 🔍 Chercher les Doublons
+#### 🔍 Find Duplicates
 ```bash
-# Liste tous les favoris qui partagent la même URL
+# List all bookmarks sharing the same URL
 python chromium_bookmark_manager.py duplicates
 ```
 
-#### 📦 Déplacement par Lots
+#### 📦 Bulk Move
 ```bash
-# Déplacer plusieurs favoris vers un dossier
-python chromium_bookmark_manager.py move_bulk "Bookmarks Bar/Projets" "Projet A" "Projet B" "Lien C"
+# Move multiple bookmarks to a folder
+python chromium_bookmark_manager.py move_bulk "Bookmarks Bar/Projects" "Project A" "Project B" "Link C"
 ```
 
 ---
 
-## ⚡ Interaction Directe avec le Navigateur
+## ⚡ Direct Browser Interaction
 
-Contrairement à d'autres outils qui manipulent des fichiers de sauvegarde, cet outil communique **directement** avec l'instance de votre navigateur via ScriptingBridge.
+Unlike other tools that manipulate backup files, this tool communicates **directly** with your browser instance via ScriptingBridge.
 
 > [!IMPORTANT]
-> **Pas besoin de fichiers intermédiaires !** Ne perdez pas de temps à exporter vos favoris en `.txt` ou `.html` pour les analyser. Interrogez directement le script, les données sont toujours à jour et les changements sont instantanés.
+> **No intermediate files needed!** Don't waste time exporting your bookmarks to `.txt` or `.html` for analysis. Query the script directly — data is always up-to-date and changes are instant.
 
 ---
 
@@ -406,6 +406,15 @@ manager.delete_item("Old Bookmark")
 
 # Clear folder
 manager.clear_folder("Bookmarks Bar/Temp")
+
+# Sort folder alphabetically
+manager.sort_folder("Bookmarks Bar/Dev")
+
+# Find duplicate bookmarks (same URL)
+duplicates = manager.find_duplicates()
+
+# Bulk move bookmarks
+manager.move_bulk("Bookmarks Bar/Archive", ["Bookmark1", "Bookmark2", "Bookmark3"])
 ```
 
 ---
