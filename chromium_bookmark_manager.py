@@ -15,6 +15,7 @@ info['LSUIElement'] = True
 from ScriptingBridge import SBApplication
 import sys
 import argparse
+import time
 
 # Supported Chromium-based browsers and their bundle identifiers
 BROWSERS = {
@@ -179,30 +180,38 @@ class BookmarkManager(BrowserApp):
         return target
     
     def _find_item(self, name, item_type="both"):
-        """Find a bookmark or folder by name. Returns (item, location, type)."""
-        # Search in bookmarks bar
-        if item_type in ["both", "bookmark"]:
-            item = self.bookmarks_bar.get_bookmark(name)
-            if item:
-                return (item, "Bookmarks Bar", "bookmark")
+        """Find a bookmark or folder by name recursively. Returns (item, location, type)."""
         
-        if item_type in ["both", "folder"]:
-            folder = self.bookmarks_bar.get_folder(name)
-            if folder:
-                return (folder, "Bookmarks Bar", "folder")
+        def search_recursive(folder, folder_name):
+            # Check bookmarks in this folder
+            if item_type in ["both", "bookmark"]:
+                item = folder.get_bookmark(name)
+                if item:
+                    return (item, folder_name, "bookmark")
+            
+            # Check if this folder itself matches
+            if item_type in ["both", "folder"] and folder.title() == name:
+                 # This is tricky because we need the parent to return it properly
+                 # For now, let's prioritize subfolders
+                 pass
+
+            # Check subfolders
+            for f in folder.folders:
+                f_title = str(f.title())
+                if item_type in ["both", "folder"] and f_title == name:
+                    return (Folder(f, self.app), folder_name, "folder")
+                
+                res = search_recursive(Folder(f, self.app), f"{folder_name}/{f_title}")
+                if res[0]:
+                    return res
+            
+            return (None, None, None)
+
+        res = search_recursive(self.bookmarks_bar, "Bookmarks Bar")
+        if res[0]: return res
         
-        # Search in other bookmarks
-        if item_type in ["both", "bookmark"]:
-            item = self.other_bookmarks.get_bookmark(name)
-            if item:
-                return (item, "Other Bookmarks", "bookmark")
-        
-        if item_type in ["both", "folder"]:
-            folder = self.other_bookmarks.get_folder(name)
-            if folder:
-                return (folder, "Other Bookmarks", "folder")
-        
-        return (None, None, None)
+        res = search_recursive(self.other_bookmarks, "Other Bookmarks")
+        return res
     
     def delete_item(self, name):
         """Delete a bookmark or folder by name."""
@@ -400,8 +409,12 @@ class BookmarkManager(BrowserApp):
         # Sort items (case-insensitive)
         items.sort(key=lambda x: x["title"].lower())
         
-        # Clear and re-add in order
+        # Clear items
         target.remove_all()
+        # Small delay to ensure deletion is processed by the browser
+        time.sleep(0.5)
+        
+        # Re-add in order
         for item in items:
             if item["type"] == "bookmark":
                 target.add_bookmark(item["title"], item["url"])
