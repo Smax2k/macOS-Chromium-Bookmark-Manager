@@ -1,5 +1,5 @@
 {
-    "comment": "Example sorting plan for demonstration",
+    "comment": "Example automation recipe for demonstration",
     "actions": [
         {
             "action": "create_folder",
