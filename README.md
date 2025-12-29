@@ -85,8 +85,8 @@ python chromium_bookmark_manager.py move "PyPI" "Bookmarks Bar/Python Resources"
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/chromium-bookmark-manager.git
-cd chromium-bookmark-manager
+git clone https://github.com/Smax2k/macOS-Chromium-Bookmark-Manager.git
+cd macOS-Chromium-Bookmark-Manager
 
 # Create virtual environment
 python3 -m venv .venv
@@ -392,6 +392,6 @@ MIT License - feel free to use this in your own projects!
 
 ## 🙏 Acknowledgments
 
+- **Inspired by [Rob Perc's ChromeBookmarkEditor](https://github.com/robperc/ChromeBookmarkEditor)** - The original Python ScriptingBridge implementation for Chrome bookmarks
 - Built with [PyObjC](https://pypi.org/project/pyobjc/)
-- Inspired by [pybookmarks](https://github.com/nicholasRutworworthy/pybookmarks) concept
 - Designed for seamless AI assistant integration
