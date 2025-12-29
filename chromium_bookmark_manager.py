@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Chromium Bookmark Manager - Manage bookmarks for Chromium-based browsers via ScriptingBridge
+macOS Chromium Bookmark Manager - Manage bookmarks for Chromium-based browsers via ScriptingBridge
 Direct bookmark manipulation in Chromium browsers (macOS only)
 
 Supported browsers: Chrome, Brave, Edge, Arc, Vivaldi, Comet, Opera, Chromium
@@ -454,7 +454,7 @@ DANGEROUS_COMMANDS = ["delete", "clear"]
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Chromium Bookmark Manager - Manage bookmarks for Chromium-based browsers via CLI",
+        description="macOS Chromium Bookmark Manager - Manage bookmarks for Chromium-based browsers via CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

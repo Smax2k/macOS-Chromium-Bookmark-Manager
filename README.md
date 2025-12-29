@@ -1,6 +1,6 @@
-# 🔖 Chromium Bookmark Manager
+# 🔖 macOS Chromium Bookmark Manager
 
-A powerful command-line tool for managing bookmarks in **Chromium-based browsers** on macOS using ScriptingBridge.
+A powerful command-line tool for managing bookmarks in **Chromium-based browsers** on **macOS** using ScriptingBridge.
 
 > **Direct manipulation** of bookmarks without import/export — changes appear **instantly** in your browser!
 
