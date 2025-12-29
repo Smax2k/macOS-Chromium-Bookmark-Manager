@@ -51,6 +51,9 @@ python chromium_bookmark_manager.py move "PyPI" "Bookmarks Bar/Python Resources"
 | `rename` | ✏️ Rename a bookmark or folder |
 | `set_url` | 🔗 Change the URL of a bookmark |
 | `move` | 📦 Move a bookmark to another folder |
+| `move_bulk` | 📦 Déplacer plusieurs favoris à la fois |
+| `duplicates` | 🔍 Rechercher les favoris avec la même URL |
+| `sort` | 📏 Trier alphabétiquement un dossier ⚠️ |
 | `delete` | 🗑️ Delete a bookmark or folder ⚠️ |
 | `clear` | 🧹 Remove all items from a folder ⚠️ |
 
@@ -212,17 +215,47 @@ python chromium_bookmark_manager.py delete "Old Bookmark"
 python chromium_bookmark_manager.py delete "Old Bookmark" -y
 
 # Delete a folder (and all its contents)
-python chromium_bookmark_manager.py delete "Temp Folder" --force
+python3 chromium_bookmark_manager.py delete "Temp Folder" --force
 ```
 
 #### 🧹 Clear Folder
 ```bash
 # Remove all items from a folder (requires confirmation)
-python chromium_bookmark_manager.py clear "Bookmarks Bar/Temp"
+python3 chromium_bookmark_manager.py clear "Bookmarks Bar/Temp"
 
 # Clear without confirmation
-python chromium_bookmark_manager.py clear "Bookmarks Bar/Temp" -y
+python3 chromium_bookmark_manager.py clear "Bookmarks Bar/Temp" -y
 ```
+
+#### 📏 Tri Alphabétique
+```bash
+# Trier un dossier (demande confirmation)
+python chromium_bookmark_manager.py sort "Bookmarks Bar/Archives"
+
+# Trier sans confirmation
+python chromium_bookmark_manager.py sort "Bookmarks Bar/Archives" --force
+```
+
+#### 🔍 Chercher les Doublons
+```bash
+# Liste tous les favoris qui partagent la même URL
+python chromium_bookmark_manager.py duplicates
+```
+
+#### 📦 Déplacement par Lots
+```bash
+# Déplacer plusieurs favoris vers un dossier
+python chromium_bookmark_manager.py move_bulk "Bookmarks Bar/Projets" "Projet A" "Projet B" "Lien C"
+```
+
+---
+
+## ⚡ Interaction Directe avec le Navigateur
+
+Contrairement à d'autres outils qui manipulent des fichiers de sauvegarde, cet outil communique **directement** avec l'instance de votre navigateur via ScriptingBridge.
+
+> [!IMPORTANT]
+> **Pas besoin de fichiers intermédiaires !** Ne perdez pas de temps à exporter vos favoris en `.txt` ou `.html` pour les analyser. Interrogez directement le script, les données sont toujours à jour et les changements sont instantanés.
 
 ---
 

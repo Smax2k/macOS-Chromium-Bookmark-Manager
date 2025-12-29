@@ -318,6 +318,98 @@ class BookmarkManager(BrowserApp):
         
         print(f"✅ Bookmark '{name}' moved to '{destination_path}'")
         return True
+    
+    def find_duplicates(self):
+        """Find bookmarks with the same URL."""
+        all_bookmarks = []
+        
+        def collect(folder, path):
+            for b in folder.bookmarks:
+                all_bookmarks.append({
+                    "title": str(b.title()),
+                    "url": str(b.URL()),
+                    "path": path
+                })
+            for f in folder.folders:
+                collect(Folder(f, self.app), f"{path}/{f.title()}")
+        
+        collect(self.bookmarks_bar, "Bookmarks Bar")
+        collect(self.other_bookmarks, "Other Bookmarks")
+        
+        url_map = {}
+        for b in all_bookmarks:
+            url = b["url"]
+            if url not in url_map:
+                url_map[url] = []
+            url_map[url].append(b)
+        
+        duplicates = {url: items for url, items in url_map.items() if len(items) > 1}
+        
+        if not duplicates:
+            print("✨ No duplicates found!")
+            return
+        
+        print(f"🔍 Found {len(duplicates)} URLs with duplicates:\n")
+        for url, items in duplicates.items():
+            print(f"🔗 URL: {url}")
+            for item in items:
+                print(f"   - {item['title']} [In: {item['path']}]")
+            print()
+
+    def move_bulk(self, names, destination_path):
+        """Move multiple bookmarks to a destination folder."""
+        destination = self._resolve_path(destination_path)
+        if not destination:
+            print(f"❌ Destination folder '{destination_path}' not found")
+            return False
+        
+        success_count = 0
+        for name in names:
+            item, location, item_type = self._find_item(name, "bookmark")
+            if item:
+                title = str(item.title())
+                url = str(item.URL())
+                item.delete()
+                destination.add_bookmark(title, url)
+                print(f"✅ Moved '{title}'")
+                success_count += 1
+            else:
+                print(f"⚠️ Bookmark '{name}' not found")
+        
+        print(f"\n📦 Successfully moved {success_count}/{len(names)} items to '{destination_path}'")
+        return True
+
+    def sort_folder(self, folder_path):
+        """Sort items in a folder alphabetically."""
+        target = self._resolve_path(folder_path)
+        if not target:
+            print(f"❌ Folder '{folder_path}' not found")
+            return False
+        
+        # Get all items
+        items = []
+        for b in target.bookmarks:
+            items.append({"type": "bookmark", "title": str(b.title()), "url": str(b.URL())})
+        for f in target.folders:
+            items.append({"type": "folder", "title": str(f.title())})
+            
+        if not items:
+            print(f"ℹ️ Folder '{folder_path}' is empty.")
+            return True
+        
+        # Sort items (case-insensitive)
+        items.sort(key=lambda x: x["title"].lower())
+        
+        # Clear and re-add in order
+        target.remove_all()
+        for item in items:
+            if item["type"] == "bookmark":
+                target.add_bookmark(item["title"], item["url"])
+            else:
+                target.add_folder(item["title"])
+        
+        print(f"✅ Sorted {len(items)} items in '{folder_path}'")
+        return True
 
 
 class Folder(BrowserApp):
@@ -447,10 +539,10 @@ def print_safety_warning(browser_name):
 
 
 # Commandes qui modifient les favoris (nécessitent un avertissement)
-MODIFYING_COMMANDS = ["add", "create_folder", "rename", "set_url", "move", "delete", "clear"]
+MODIFYING_COMMANDS = ["add", "create_folder", "rename", "set_url", "move", "delete", "clear", "move_bulk", "sort"]
 
 # Commandes dangereuses qui nécessitent une confirmation
-DANGEROUS_COMMANDS = ["delete", "clear"]
+DANGEROUS_COMMANDS = ["delete", "clear", "sort"]
 
 
 def main():
@@ -541,6 +633,19 @@ AI Usage:
     p_clear.add_argument("folder", help="Folder path to clear")
     p_clear.add_argument("-y", "--force", action="store_true", help="Skip confirmation prompt")
     
+    # duplicates
+    subparsers.add_parser("duplicates", help="Find duplicate bookmarks (same URL)")
+    
+    # move_bulk
+    p_movebulk = subparsers.add_parser("move_bulk", help="Move multiple bookmarks to a folder")
+    p_movebulk.add_argument("destination", help="Destination folder path")
+    p_movebulk.add_argument("names", nargs="+", help="Names of bookmarks to move")
+    
+    # sort
+    p_sort = subparsers.add_parser("sort", help="Sort elements in a folder alphabetically")
+    p_sort.add_argument("folder", help="Folder path to sort")
+    p_sort.add_argument("-y", "--force", action="store_true", help="Skip confirmation prompt")
+    
     args = parser.parse_args()
     
     if not args.action:
@@ -589,6 +694,16 @@ AI Usage:
             # Confirmation requise pour clear
             if args.force or confirm_action(f"Voulez-vous vraiment VIDER le dossier '{args.folder}' ? Cette action est IRRÉVERSIBLE !"):
                 manager.clear_folder(args.folder)
+            else:
+                print("❌ Opération annulée.")
+        elif args.action == "duplicates":
+            manager.find_duplicates()
+        elif args.action == "move_bulk":
+            manager.move_bulk(args.names, args.destination)
+        elif args.action == "sort":
+            # Le tri est considéré comme dangereux car il recrée les items (clear + add)
+            if args.force or confirm_action(f"Voulez-vous vraiment TRIER le dossier '{args.folder}' ?"):
+                manager.sort_folder(args.folder)
             else:
                 print("❌ Opération annulée.")
             
