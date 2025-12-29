@@ -1,0 +1,33 @@
+{
+    "comment": "Example sorting plan for demonstration",
+    "actions": [
+        {
+            "action": "create_folder",
+            "path": "Bookmarks Bar/Development"
+        },
+        {
+            "action": "move_bulk",
+            "destination": "Bookmarks Bar/Development",
+            "items": [
+                "GitHub",
+                "Stack Overflow",
+                "Python Documentation"
+            ]
+        },
+        {
+            "action": "add",
+            "title": "New Cool Project",
+            "url": "https://github.com/cool/project",
+            "folder": "Bookmarks Bar/Development"
+        },
+        {
+            "action": "rename",
+            "name": "Old Project Name",
+            "new_name": "Archive Project 2023"
+        },
+        {
+            "action": "delete",
+            "name": "Bookmarks Bar/Temporary Links"
+        }
+    ]
+}
