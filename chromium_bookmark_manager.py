@@ -576,16 +576,22 @@ Examples:
   %(prog)s list --folders                          # List only folders
   %(prog)s -b brave list --depth 2                 # List Brave bookmarks with max depth 2
   %(prog)s search "github"                         # Search for "github" in bookmarks
+  %(prog)s get "GitHub"                            # Get details of a bookmark or folder
   %(prog)s add "GitHub" "https://github.com"       # Add bookmark to Bookmarks Bar
   %(prog)s create_folder "Bookmarks Bar/Projects"  # Create a new folder
   %(prog)s rename "Old Name" "New Name"            # Rename a bookmark or folder
+  %(prog)s set_url "GitHub" "https://github.com/new" # Change bookmark URL
+  %(prog)s move "GitHub" "Bookmarks Bar/Dev"       # Move bookmark to another folder
+  %(prog)s move_bulk "Dest/Folder" "A" "B" "C"     # Move multiple bookmarks at once
+  %(prog)s duplicates                              # Find bookmarks with same URL
+  %(prog)s sort "Bookmarks Bar/Dev"                # Sort folder alphabetically
   %(prog)s delete "Old Bookmark"                   # Delete (with confirmation)
   %(prog)s delete "Old Bookmark" -y                # Delete without confirmation
   %(prog)s clear "Bookmarks Bar/Temp" --force      # Clear folder without confirmation
 
 Safety:
   - Modifying commands show a warning to export bookmarks first
-  - 'delete' and 'clear' require confirmation (use -y/--force to skip)
+  - 'delete', 'clear', and 'sort' require confirmation (use -y/--force to skip)
   - Changes are IMMEDIATE and PERMANENT in your browser
 
 AI Usage:
