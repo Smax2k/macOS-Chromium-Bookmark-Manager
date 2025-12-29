@@ -212,13 +212,13 @@ Execute a list of actions defined in a JSON file.
 
 ```bash
 # Apply a recipe
-python chromium_bookmark_manager.py batch sorting_example.json
+python chromium_bookmark_manager.py batch recipe_example.json
 
 # Skip confirmation
-python chromium_bookmark_manager.py batch sorting_example.json --force
+python chromium_bookmark_manager.py batch recipe_example.json --force
 ```
 
-**JSON Format Example (`sorting_example.json`):**
+**JSON Format Example (`recipe_example.json`):**
 
 ```json
 {
